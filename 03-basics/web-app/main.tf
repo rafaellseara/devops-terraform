@@ -2,9 +2,9 @@ terraform {
   # Assumes s3 bucket and dynamo DB table already set up
   # See /code/03-basics/aws-backend
   backend "s3" {
-    bucket         = "devops-directive-tf-state"
+    bucket         = "devops-terraform-rafaellseara"
     key            = "03-basics/web-app/terraform.tfstate"
-    region         = "us-east-1"
+    region         = "eu-west-1"
     dynamodb_table = "terraform-state-locking"
     encrypt        = true
   }
@@ -18,11 +18,11 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = "eu-west-1"
 }
 
 resource "aws_instance" "instance_1" {
-  ami             = "ami-011899242bb902164" # Ubuntu 20.04 LTS // us-east-1
+  ami             = "ami-021d9f8e43481e7da" # Ubuntu 20.04 LTS // eu-west-1
   instance_type   = "t2.micro"
   security_groups = [aws_security_group.instances.name]
   user_data       = <<-EOF
@@ -33,7 +33,7 @@ resource "aws_instance" "instance_1" {
 }
 
 resource "aws_instance" "instance_2" {
-  ami             = "ami-011899242bb902164" # Ubuntu 20.04 LTS // us-east-1
+  ami             = "ami-021d9f8e43481e7da" # Ubuntu 20.04 LTS // eu-west-1
   instance_type   = "t2.micro"
   security_groups = [aws_security_group.instances.name]
   user_data       = <<-EOF
@@ -44,7 +44,7 @@ resource "aws_instance" "instance_2" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket_prefix = "devops-directive-web-app-data"
+  bucket_prefix = "rafaellseara-web-app-data"
   force_destroy = true
 }
 
@@ -186,21 +186,22 @@ resource "aws_lb" "load_balancer" {
 
 }
 
-resource "aws_route53_zone" "primary" {
-  name = "devopsdeployed.com"
-}
+# Uncomment the following lines to set up Route 53 DNS records (don't own the domain)
+# resource "aws_route53_zone" "primary" {
+#   name = "devopsdeployed.com"
+# }
 
-resource "aws_route53_record" "root" {
-  zone_id = aws_route53_zone.primary.zone_id
-  name    = "devopsdeployed.com"
-  type    = "A"
+# resource "aws_route53_record" "root" {
+#   zone_id = aws_route53_zone.primary.zone_id
+#   name    = "devopsdeployed.com"
+#   type    = "A"
 
-  alias {
-    name                   = aws_lb.load_balancer.dns_name
-    zone_id                = aws_lb.load_balancer.zone_id
-    evaluate_target_health = true
-  }
-}
+#   alias {
+#     name                   = aws_lb.load_balancer.dns_name
+#     zone_id                = aws_lb.load_balancer.zone_id
+#     evaluate_target_health = true
+#   }
+# }
 
 resource "aws_db_instance" "db_instance" {
   allocated_storage = 20
@@ -211,8 +212,8 @@ resource "aws_db_instance" "db_instance" {
   auto_minor_version_upgrade = true
   storage_type               = "standard"
   engine                     = "postgres"
-  engine_version             = "12"
-  instance_class             = "db.t2.micro"
+  engine_version             = "15.7"
+  instance_class             = "db.t3.micro"
   name                       = "mydb"
   username                   = "foo"
   password                   = "foobarbaz"
